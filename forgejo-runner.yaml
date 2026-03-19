@@ -27,6 +27,24 @@ spec:
       labels:
         app: forgejo-runner
     spec:
+      serviceAccountName: forgejo-runner
+      initContainers:
+        - name: install-tools
+          image: docker:cli
+          command: ["/bin/sh", "-c"]
+          args:
+            - cp /usr/local/bin/docker /shared-bin/docker
+          volumeMounts:
+            - name: shared-bin
+              mountPath: /shared-bin
+        - name: install-kubectl
+          image: bitnami/kubectl:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - cp /opt/bitnami/kubectl/bin/kubectl /shared-bin/kubectl
+          volumeMounts:
+            - name: shared-bin
+              mountPath: /shared-bin
       containers:
         - name: runner
           image: code.forgejo.org/forgejo/runner:6.3.1
@@ -37,6 +55,8 @@ spec:
               value: "1"
             - name: DOCKER_CERT_PATH
               value: /certs/client
+            - name: PATH
+              value: /shared-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -45,7 +65,7 @@ spec:
                   --instance http://forgejo.forgejo.svc.cluster.local:3000 \
                   --token $(RUNNER_TOKEN) \
                   --name k8s-runner \
-                  --labels ubuntu-latest:docker://node:20,self-hosted:host \
+                  --labels self-hosted:host \
                   --no-interactive
               fi
               forgejo-runner daemon
@@ -57,6 +77,8 @@ spec:
               mountPath: /data
             - name: docker-certs
               mountPath: /certs
+            - name: shared-bin
+              mountPath: /shared-bin
         - name: dind
           image: docker:dind
           securityContext:
@@ -76,4 +98,6 @@ spec:
         - name: docker-certs
           emptyDir: {}
         - name: dind-storage
+          emptyDir: {}
+        - name: shared-bin
           emptyDir: {}
