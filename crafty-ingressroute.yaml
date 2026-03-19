@@ -1,4 +1,12 @@
 apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: crafty-transport
+  namespace: crafty
+spec:
+  insecureSkipVerify: true
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: crafty
@@ -9,21 +17,10 @@ spec:
   routes:
     - match: Host(`crafty.oryxserver.org`)
       kind: Rule
-      middlewares:
-        - name: crowdsec
-          namespace: traefik
       services:
         - name: crafty-web
           port: 8443
           scheme: https
-          serversTransport: crafty-transport
+          serversTransport: crafty-crafty-transport@kubernetescrd
   tls:
     secretName: wildcard-oryxserver-tls
----
-apiVersion: traefik.io/v1alpha1
-kind: ServersTransport
-metadata:
-  name: crafty-transport
-  namespace: crafty
-spec:
-  insecureSkipVerify: true
