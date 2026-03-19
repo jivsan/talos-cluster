@@ -11,7 +11,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: https://github.com/jivsan/talos-cluster-gitops.git
+  url: http://forgejo.forgejo.svc.cluster.local:3000/jivsan/talos-cluster-gitops.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
