@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crafty
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: crafty-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    server: 10.0.0.6
+    path: /mnt/vault/nfs-pvc-kubernetes/crafty
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: crafty-pvc
+  namespace: crafty
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  volumeName: crafty-pv
+  storageClassName: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crafty
+  namespace: crafty
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: crafty
+  template:
+    metadata:
+      labels:
+        app: crafty
+    spec:
+      containers:
+        - name: crafty
+          image: registry.gitlab.com/crafty-controller/crafty-4:latest
+          env:
+            - name: TZ
+              value: "Etc/UTC"
+          ports:
+            - containerPort: 8443
+              name: web
+            - containerPort: 8123
+              name: dynmap
+            - containerPort: 19132
+              protocol: UDP
+              name: bedrock
+            - containerPort: 25565
+              name: minecraft
+          volumeMounts:
+            - name: crafty-data
+              mountPath: /crafty/backups
+              subPath: backups
+            - name: crafty-data
+              mountPath: /crafty/logs
+              subPath: logs
+            - name: crafty-data
+              mountPath: /crafty/servers
+              subPath: servers
+            - name: crafty-data
+              mountPath: /crafty/app/config
+              subPath: config
+            - name: crafty-data
+              mountPath: /crafty/import
+              subPath: import
+      volumes:
+        - name: crafty-data
+          persistentVolumeClaim:
+            claimName: crafty-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crafty-mc
+  namespace: crafty
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: mc.oryxserver.org
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 25565
+      targetPort: 25565
+      protocol: TCP
+      name: minecraft
+    - port: 19132
+      targetPort: 19132
+      protocol: UDP
+      name: bedrock
+  selector:
+    app: crafty
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crafty-web
+  namespace: crafty
+spec:
+  ports:
+    - port: 8443
+      targetPort: 8443
+      name: web
+  selector:
+    app: crafty
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crafty
+  namespace: crafty
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/service.serversscheme: "https"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: crafty.oryxserver.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: crafty-web
+                port:
+                  number: 8443
+  tls:
+    - hosts:
+        - crafty.oryxserver.org
+      secretName: wildcard-oryxserver-tls

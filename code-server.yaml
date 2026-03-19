@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: code-server-pvc
+  namespace: devtools
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-server
+  namespace: devtools
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: code-server
+  template:
+    metadata:
+      labels:
+        app: code-server
+    spec:
+      containers:
+        - name: code-server
+          image: linuxserver/code-server:latest
+          ports:
+            - containerPort: 8443
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Oslo"
+            - name: PASSWORD
+              value: "changeme123"
+            - name: DEFAULT_WORKSPACE
+              value: "/config/workspace"
+          volumeMounts:
+            - name: data
+              mountPath: /config
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: code-server-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-server
+  namespace: devtools
+spec:
+  ports:
+    - port: 8443
+      targetPort: 8443
+  selector:
+    app: code-server
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: code-server
+  namespace: devtools
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: code.oryxserver.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: code-server
+                port:
+                  number: 8443
+  tls:
+    - hosts:
+        - code.oryxserver.org
+      secretName: wildcard-oryxserver-tls

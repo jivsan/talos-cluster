@@ -1,0 +1,9 @@
+nfs:
+  server: 10.0.0.6
+  path: /mnt/vault/nfs-pvc-kubernetes
+
+storageClass:
+  name: nfs
+  defaultClass: true
+  reclaimPolicy: Retain
+  archiveOnDelete: true

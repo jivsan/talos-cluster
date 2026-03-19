@@ -1,0 +1,329 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: homepage
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: homepage
+  namespace: homepage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: homepage
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces","pods","nodes"]
+    verbs: ["get","list"]
+  - apiGroups: ["extensions","networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get","list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes","pods"]
+    verbs: ["get","list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: homepage
+subjects:
+  - kind: ServiceAccount
+    name: homepage
+    namespace: homepage
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage
+  namespace: homepage
+data:
+  settings.yaml: |
+    title: ORYXSERVER
+    favicon: https://cdn-icons-png.flaticon.com/512/2933/2933245.png
+    theme: dark
+    color: slate
+    headerStyle: clean
+    layout:
+      Media & Entertainment:
+        style: row
+        columns: 3
+        icon: mdi-multimedia
+      Cloud & Productivity:
+        style: row
+        columns: 3
+        icon: mdi-cloud
+      Development:
+        style: row
+        columns: 3
+        icon: mdi-code-braces
+      Monitoring & Management:
+        style: row
+        columns: 3
+        icon: mdi-monitor-dashboard
+      Infrastructure:
+        style: row
+        columns: 4
+        icon: mdi-server-network
+      Utilities:
+        style: row
+        columns: 3
+        icon: mdi-toolbox
+    cardBlur: md
+    disableCollapse: false
+    hideVersion: true
+
+  widgets.yaml: |
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "talos-cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+          hour12: false
+    - openmeteo:
+        label: Elverum
+        latitude: 60.88
+        longitude: 11.56
+        timezone: Europe/Oslo
+        units: metric
+
+  services.yaml: |
+    - Media & Entertainment:
+        - Jellyfin:
+            icon: jellyfin.png
+            href: https://jellyfin.oryxserver.org
+            description: Media streaming server
+            siteMonitor: https://jellyfin.oryxserver.org
+            statusStyle: dot
+        - Crafty Controller:
+            icon: crafty-controller.png
+            href: https://crafty.oryxserver.org
+            description: Minecraft server management
+            siteMonitor: https://crafty.oryxserver.org
+            statusStyle: dot
+        - Immich:
+            icon: immich.png
+            href: https://photos.oryxserver.org
+            description: Photo & video management with AI
+            siteMonitor: https://photos.oryxserver.org
+            statusStyle: dot
+
+    - Cloud & Productivity:
+        - Nextcloud:
+            icon: nextcloud.png
+            href: https://nextcloud.oryxserver.org
+            description: Cloud storage & collaboration
+            siteMonitor: https://nextcloud.oryxserver.org
+            statusStyle: dot
+        - Excalidraw:
+            icon: excalidraw.png
+            href: https://draw.oryxserver.org
+            description: Collaborative whiteboard
+            siteMonitor: https://draw.oryxserver.org
+            statusStyle: dot
+        - SearXNG:
+            icon: searxng.png
+            href: https://search.oryxserver.org
+            description: Private metasearch engine
+            siteMonitor: http://searxng.searxng.svc.cluster.local:8080
+            statusStyle: dot
+
+    - Development:
+        - Code Server:
+            icon: vscode.png
+            href: https://code.oryxserver.org
+            description: VS Code in the browser
+            siteMonitor: https://code.oryxserver.org
+            statusStyle: dot
+        - JupyterLab:
+            icon: jupyter.png
+            href: https://jupyter.oryxserver.org
+            description: Data science notebooks
+            siteMonitor: https://jupyter.oryxserver.org
+            statusStyle: dot
+        - Discord Bot:
+            icon: discord.png
+            href: https://discord.com
+            description: JivBot — AI assistant (Ollama)
+            statusStyle: dot
+
+    - Monitoring & Management:
+        - Rancher:
+            icon: rancher.png
+            href: https://rancher.oryxserver.org
+            description: Kubernetes cluster management
+            siteMonitor: https://rancher.oryxserver.org
+            statusStyle: dot
+        - Grafana:
+            icon: grafana.png
+            href: http://10.0.0.16:3000
+            description: Metrics & dashboards
+            siteMonitor: http://10.0.0.16:3000
+            statusStyle: dot
+        - Uptime Kuma:
+            icon: uptime-kuma.png
+            href: https://status.oryxserver.org
+            description: Service health monitoring
+            siteMonitor: https://status.oryxserver.org
+            statusStyle: dot
+
+    - Infrastructure:
+        - Proxmox (Thor):
+            icon: proxmox.png
+            href: https://10.0.0.2:8006
+            description: Node 1 — SSD storage
+            siteMonitor: https://10.0.0.2:8006
+            statusStyle: dot
+        - Proxmox (Hella):
+            icon: proxmox.png
+            href: https://10.0.0.3:8006
+            description: Node 2 — HDD storage
+            siteMonitor: https://10.0.0.3:8006
+            statusStyle: dot
+        - TrueNAS:
+            icon: truenas.png
+            href: http://10.0.0.6
+            description: ZFS storage — vault pool
+            siteMonitor: http://10.0.0.6
+            statusStyle: dot
+        - pfSense:
+            icon: pfsense.png
+            href: https://10.0.0.1
+            description: Firewall & router
+            siteMonitor: https://10.0.0.1
+            statusStyle: dot
+
+    - Utilities:
+        - IT Tools:
+            icon: it-tools.png
+            href: https://tools.oryxserver.org
+            description: Developer utility collection
+            siteMonitor: https://tools.oryxserver.org
+            statusStyle: dot
+        - Stirling PDF:
+            icon: stirling-pdf.png
+            href: https://pdf.oryxserver.org
+            description: PDF toolkit
+            siteMonitor: https://pdf.oryxserver.org
+            statusStyle: dot
+        - Pi-hole:
+            icon: pi-hole.png
+            href: http://10.0.0.4/admin
+            description: DNS & ad blocking
+            siteMonitor: http://10.0.0.4
+            statusStyle: dot
+
+  bookmarks.yaml: |
+    - Homelab Resources:
+        - Talos Docs:
+            - icon: si-kubernetes
+              href: https://www.talos.dev/v1.12/
+        - Kubernetes Docs:
+            - icon: si-kubernetes
+              href: https://kubernetes.io/docs/
+        - Helm Charts:
+            - icon: si-helm
+              href: https://artifacthub.io/
+
+  docker.yaml: ""
+
+  kubernetes.yaml: |
+    mode: cluster
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:latest
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: config
+              mountPath: /app/config/settings.yaml
+              subPath: settings.yaml
+            - name: config
+              mountPath: /app/config/widgets.yaml
+              subPath: widgets.yaml
+            - name: config
+              mountPath: /app/config/services.yaml
+              subPath: services.yaml
+            - name: config
+              mountPath: /app/config/bookmarks.yaml
+              subPath: bookmarks.yaml
+            - name: config
+              mountPath: /app/config/docker.yaml
+              subPath: docker.yaml
+            - name: config
+              mountPath: /app/config/kubernetes.yaml
+              subPath: kubernetes.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: homepage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: homepage
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: home.oryxserver.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000
+  tls:
+    - hosts:
+        - home.oryxserver.org
+      secretName: wildcard-oryxserver-tls
