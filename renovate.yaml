@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: renovate
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: renovate-config
+  namespace: renovate
+data:
+  config.json: |
+    {
+      "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+      "platform": "forgejo",
+      "endpoint": "http://forgejo.forgejo.svc.cluster.local:3000/api/v1",
+      "autodiscover": true,
+      "autodiscoverFilter": ["jivsan/*"],
+      "gitAuthor": "Renovate Bot <renovate@oryxserver.org>",
+      "onboarding": true,
+      "onboardingConfig": {
+        "extends": ["config:recommended"]
+      },
+      "packageRules": [
+        {
+          "matchDatasources": ["docker"],
+          "labels": ["docker-update"],
+          "automerge": false
+        },
+        {
+          "matchDatasources": ["docker"],
+          "matchUpdateTypes": ["patch"],
+          "automerge": true,
+          "automergeType": "branch"
+        }
+      ]
+    }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  schedule: "0 */4 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: renovate
+              image: renovate/renovate:latest
+              env:
+                - name: RENOVATE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-secret
+                      key: FORGEJO_TOKEN
+                - name: RENOVATE_CONFIG_FILE
+                  value: /config/config.json
+                - name: LOG_LEVEL
+                  value: info
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+          restartPolicy: Never
+          volumes:
+            - name: config
+              configMap:
+                name: renovate-config
