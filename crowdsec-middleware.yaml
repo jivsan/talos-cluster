@@ -7,5 +7,5 @@ spec:
   plugin:
     crowdsec-bouncer:
       crowdsecLapiScheme: http
-      crowdsecLapiHost: crowdsec-lapi.crowdsec.svc.cluster.local:8080
+      crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
       crowdsecLapiKey: /nxqA889PogsRMsbPWxi+ftHoMZaaY8L9dgB6m2pJsU
