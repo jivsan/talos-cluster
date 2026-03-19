@@ -1,0 +1,4 @@
+secrets/
+rancher/
+test-app.yaml
+test-pvc.yaml
