@@ -42,6 +42,8 @@ metadata:
   name: it-tools
   namespace: it-tools
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: tools.oryxserver.org

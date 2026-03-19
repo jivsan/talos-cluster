@@ -160,6 +160,8 @@ metadata:
   name: gitea
   namespace: gitea
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: git.oryxserver.org

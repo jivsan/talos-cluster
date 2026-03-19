@@ -69,6 +69,8 @@ metadata:
   name: code-server
   namespace: devtools
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: code.oryxserver.org

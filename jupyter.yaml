@@ -68,6 +68,8 @@ metadata:
   name: jupyter
   namespace: devtools
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: jupyter.oryxserver.org

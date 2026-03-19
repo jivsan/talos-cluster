@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`crafty.oryxserver.org`)
       kind: Rule
+      middlewares:
+        - name: crowdsec
+          namespace: traefik
       services:
         - name: crafty-web
           port: 8443

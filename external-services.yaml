@@ -31,6 +31,8 @@ metadata:
   name: truenas
   namespace: external
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: truenas.oryxserver.org
@@ -76,6 +78,8 @@ metadata:
   name: pfsense
   namespace: external
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   entryPoints:
     - websecure
   routes:
@@ -125,6 +129,8 @@ metadata:
   name: pihole
   namespace: external
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: pihole.oryxserver.org
@@ -170,6 +176,8 @@ metadata:
   name: grafana
   namespace: external
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: grafana.oryxserver.org

@@ -240,6 +240,8 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: ""
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: photos.oryxserver.org

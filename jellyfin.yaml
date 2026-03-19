@@ -101,6 +101,8 @@ metadata:
   name: jellyfin
   namespace: jellyfin
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: jellyfin.oryxserver.org

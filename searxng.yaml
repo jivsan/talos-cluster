@@ -67,6 +67,8 @@ metadata:
   name: searxng
   namespace: searxng
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: search.oryxserver.org

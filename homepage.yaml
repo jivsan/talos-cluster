@@ -311,6 +311,8 @@ metadata:
   name: homepage
   namespace: homepage
 spec:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
   ingressClassName: traefik
   rules:
     - host: home.oryxserver.org
