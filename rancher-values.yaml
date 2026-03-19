@@ -1,7 +1,0 @@
-hostname: rancher.oryxserver.org
-ingress:
-  tls:
-    source: secret
-    secretName: wildcard-oryxserver-tls
-replicas: 1
-bootstrapPassword: "admin"
