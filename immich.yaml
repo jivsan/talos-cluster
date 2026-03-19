@@ -4,17 +4,6 @@ metadata:
   name: immich
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: immich-secrets
-  namespace: immich
-type: Opaque
-stringData:
-  DB_PASSWORD: "immich_db_p@ss2024"
-  DB_DATABASE_NAME: "immich"
-  DB_USERNAME: "immich"
----
-apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: immich-upload-pv
