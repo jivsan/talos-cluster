@@ -4,7 +4,102 @@
 
 This is the quick reference guide for deploying applications to Christina's self-hosted Talos Kubernetes cluster. If you are an AI assistant helping Christina deploy, configure, or troubleshoot services on this cluster, this document tells you everything you need to know.
 
-**Golden rule:** All manifests go in `~/Desktop/important/talos-cluster/services/manifests/`. Push to Forgejo and Flux auto-deploys within 60 seconds.
+**Golden rule:** All manifests are organized in folders under `~/Desktop/important/talos-cluster/services/manifests/`. A root `kustomization.yaml` tells Flux where to find everything. Push to Forgejo and Flux auto-deploys within 60 seconds.
+
+---
+
+## Repository Structure
+
+```
+~/Desktop/important/talos-cluster/services/manifests/
+├── kustomization.yaml              # Root - Flux reads this to find all manifests
+├── cluster-quickref.md             # This file - AI deployment guide
+├── deployment-guide.md             # Full operations manual
+├── renovate.json                   # Renovate auto-update config
+├── .gitignore                      # Excludes secrets/, helm-values/
+│
+├── apps/                           # Application deployments
+│   ├── crafty/
+│   │   ├── crafty.yaml             # Deployment, Service, PVC
+│   │   └── crafty-ingressroute.yaml # IngressRoute + ServersTransport (HTTPS backend)
+│   ├── jellyfin/
+│   │   └── jellyfin.yaml
+│   ├── immich/
+│   │   ├── immich.yaml
+│   │   └── sealed-immich-secret.yaml
+│   ├── nextcloud/
+│   │   ├── nextcloud.yaml
+│   │   └── sealed-nextcloud-secret.yaml
+│   ├── searxng/
+│   │   └── searxng.yaml
+│   ├── homepage/
+│   │   └── homepage.yaml
+│   ├── openwebui/
+│   │   └── openwebui.yaml
+│   ├── it-tools/
+│   │   └── it-tools.yaml
+│   ├── devtools/
+│   │   ├── code-server.yaml
+│   │   └── jupyter.yaml
+│   └── discordbot-deploy/
+│       └── sealed-discordbot-secret.yaml
+│
+├── infrastructure/                 # Cluster infrastructure
+│   ├── metallb/
+│   │   └── metallb-config.yaml     # IP pool + L2 advertisement
+│   ├── traefik/
+│   │   ├── traefik-tls-store.yaml  # Default TLS store
+│   │   └── sealed-cloudflare-secret.yaml
+│   ├── crowdsec/
+│   │   └── crowdsec-middleware.yaml # Bouncer plugin middleware
+│   ├── external-dns/
+│   │   └── external-dns.yaml       # Pi-hole v6 provider
+│   └── monitoring/
+│       ├── k8s-monitoring.yaml     # kube-state-metrics
+│       └── k8s-node-exporter.yaml  # DaemonSet on all nodes
+│
+├── git/                            # Git & CI/CD
+│   ├── forgejo/
+│   │   ├── forgejo.yaml            # Forgejo + PostgreSQL
+│   │   ├── forgejo-runner.yaml     # CI/CD runner with DinD
+│   │   ├── forgejo-runner-rbac.yaml
+│   │   ├── sealed-forgejo-secret.yaml
+│   │   └── sealed-forgejo-runner-secret.yaml
+│   └── renovate/
+│       ├── renovate.yaml           # CronJob for auto-updates
+│       └── sealed-renovate-secret.yaml
+│
+├── external/                       # External service proxies
+│   └── external-services.yaml      # TrueNAS, pfSense, Pi-hole, Grafana
+│
+├── flux-system/                    # Flux bootstrap (auto-managed)
+│   ├── gotk-components.yaml
+│   ├── gotk-sync.yaml
+│   └── kustomization.yaml
+│
+├── secrets/                        # Plain text secrets (GITIGNORED)
+│   ├── nextcloud-secret.yaml
+│   ├── nextcloud.yaml
+│   └── ...
+│
+└── helm-values/                    # Helm values files (GITIGNORED)
+    ├── traefik-values.yaml
+    ├── crowdsec-values.yaml
+    ├── nfs-provisioner-values.yaml
+    └── rancher-values.yaml
+```
+
+### Adding a new app to the structure
+
+1. Create a folder: `mkdir -p apps/myapp/`
+2. Put your manifest in it: `apps/myapp/myapp.yaml`
+3. Add the path to `kustomization.yaml` under the `# Apps` section
+4. If it has sealed secrets, put them in the same folder
+5. `git add -A && git commit -m "Deploy myapp" && git push`
+
+### Adding infrastructure
+
+Same process but put files in `infrastructure/myinfra/` and add to the `# Infrastructure` section in `kustomization.yaml`.
 
 ---
 
@@ -36,7 +131,7 @@ Every app follows the same pattern. Copy this template and customize it.
 
 ### Step 1: Create the manifest
 
-Save as `~/Desktop/important/talos-cluster/services/manifests/myapp.yaml`:
+Save as `~/Desktop/important/talos-cluster/services/manifests/apps/myapp/myapp.yaml`:
 
 ```yaml
 apiVersion: v1
@@ -183,11 +278,16 @@ envFrom:
       name: myapp-secrets
 ```
 
-### Step 4: Push to Forgejo
+### Step 4: Add to kustomization.yaml and push to Forgejo
 
 ```bash
 cd ~/Desktop/important/talos-cluster/services/manifests
-git add myapp.yaml sealed-myapp-secret.yaml
+
+# Add the new manifest to kustomization.yaml under # Apps section
+# Add this line:  - apps/myapp/myapp.yaml
+nano kustomization.yaml
+
+git add apps/myapp/myapp.yaml sealed-myapp-secret.yaml kustomization.yaml
 git commit -m "Deploy myapp"
 git push
 ```
@@ -505,9 +605,15 @@ If your app name matches a Kubernetes service name, Kubernetes auto-creates envi
 - For existing data, use manual PV/PVC with `storageClassName: ""` pointing to specific NFS path
 - TrueNAS NFS share: `10.0.0.6:/mnt/vault/nfs-pvc-kubernetes`
 
+### Renovate Auto-Updates
+- Renovate runs every 4 hours and creates PRs for outdated images
+- **PostgreSQL is pinned to v16.x** in `renovate.json` — major version upgrades break data directories
+- Patch updates auto-merge, major/minor updates require manual merge
+- PRs appear in Forgejo under each repo's Pull Requests tab
+
 ### Flux Sync
-- Flux watches the `services/manifests/` directory
-- Only Kubernetes manifests (YAML) should be in the root — no Helm values, docs, or scripts
+- Flux reads the root `kustomization.yaml` to discover all manifests
+- Only files referenced in `kustomization.yaml` are applied — putting a YAML file in a folder alone won't deploy it
 - Helm values go in `helm-values/` (gitignored)
 - Plain secrets go in `secrets/` (gitignored)
 - **Flux runs with `prune: false`** — deleting a manifest from git does NOT delete the resource from the cluster. Delete namespaces manually.
@@ -525,7 +631,10 @@ If your app name matches a Kubernetes service name, Kubernetes auto-creates envi
 ```bash
 # Deploy workflow
 cd ~/Desktop/important/talos-cluster/services/manifests
-git add myapp.yaml sealed-myapp-secret.yaml
+mkdir -p apps/myapp
+# Create apps/myapp/myapp.yaml
+# Add path to kustomization.yaml
+git add -A
 git commit -m "Deploy myapp"
 git push
 
@@ -564,7 +673,10 @@ kubectl -n myapp rollout restart deployment myapp
 
 # Delete an app completely
 kubectl delete namespace myapp
-git rm myapp.yaml sealed-myapp-secret.yaml
+# Remove folder and entry from kustomization.yaml
+git rm -r apps/myapp/
+# Edit kustomization.yaml to remove the reference
+git add -A
 git commit -m "Remove myapp" && git push
 ```
 
