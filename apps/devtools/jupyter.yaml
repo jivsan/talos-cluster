@@ -41,9 +41,9 @@ spec:
             - name: JUPYTER_ENABLE_LAB
               value: "yes"
             - name: JUPYTER_TOKEN
+              value: "changeme123"
             - name: JUPYTER_PORT
               value: "8888"
-              value: "changeme123"
           volumeMounts:
             - name: data
               mountPath: /home/jovyan/work
