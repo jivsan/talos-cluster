@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: docsight
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: docsight-data-pvc
+  namespace: docsight
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docsight
+  namespace: docsight
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: docsight
+  template:
+    metadata:
+      labels:
+        app: docsight
+    spec:
+      containers:
+        - name: docsight
+          image: ghcr.io/itsdnns/docsight:latest
+          ports:
+            - containerPort: 8765
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: docsight-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docsight
+  namespace: docsight
+spec:
+  ports:
+    - port: 8765
+      targetPort: 8765
+  selector:
+    app: docsight
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docsight
+  namespace: docsight
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-crowdsec@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: modem.oryxserver.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docsight
+                port:
+                  number: 8765
+  tls:
+    - hosts:
+        - modem.oryxserver.org
+      secretName: wildcard-oryxserver-tls
