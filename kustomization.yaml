@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Infrastructure
+  - infrastructure/metallb/metallb-config.yaml
+  - infrastructure/traefik/traefik-tls-store.yaml
+  - infrastructure/traefik/sealed-cloudflare-secret.yaml
+  - infrastructure/crowdsec/crowdsec-middleware.yaml
+  - infrastructure/external-dns/external-dns.yaml
+  - infrastructure/monitoring/k8s-monitoring.yaml
+  - infrastructure/monitoring/k8s-node-exporter.yaml
+  # Git & CI/CD
+  - git/forgejo/forgejo.yaml
+  - git/forgejo/forgejo-runner.yaml
+  - git/forgejo/forgejo-runner-rbac.yaml
+  - git/forgejo/sealed-forgejo-secret.yaml
+  - git/forgejo/sealed-forgejo-runner-secret.yaml
+  - git/renovate/renovate.yaml
+  - git/renovate/sealed-renovate-secret.yaml
+  # External Services
+  - external/external-services.yaml
+  # Apps
+  - apps/crafty/crafty.yaml
+  - apps/crafty/crafty-ingressroute.yaml
+  - apps/jellyfin/jellyfin.yaml
+  - apps/immich/immich.yaml
+  - apps/immich/sealed-immich-secret.yaml
+  - apps/nextcloud/nextcloud.yaml
+  - apps/nextcloud/sealed-nextcloud-secret.yaml
+  - apps/searxng/searxng.yaml
+  - apps/homepage/homepage.yaml
+  - apps/it-tools/it-tools.yaml
+  - apps/devtools/jupyter.yaml
+  - apps/devtools/code-server.yaml
+  - apps/discordbot-deploy/sealed-discordbot-secret.yaml
