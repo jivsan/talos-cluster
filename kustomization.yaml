@@ -33,3 +33,5 @@ resources:
   - apps/devtools/jupyter.yaml
   - apps/devtools/code-server.yaml
   - apps/discordbot-deploy/sealed-discordbot-secret.yaml
+  - apps/nexterm/nexterm.yaml
+  - apps/nexterm/sealed-nexterm-secret.yaml
