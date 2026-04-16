@@ -101,7 +101,7 @@ spec:
     spec:
       containers:
         - name: forgejo
-          image: data.forgejo.org/forgejo/forgejo:14
+          image: data.forgejo.org/forgejo/forgejo:15
           ports:
             - containerPort: 3000
               name: web
