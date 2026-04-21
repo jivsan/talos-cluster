@@ -47,7 +47,7 @@ spec:
               mountPath: /shared-bin
       containers:
         - name: runner
-          image: code.forgejo.org/forgejo/runner:12.8.0
+          image: code.forgejo.org/forgejo/runner:12.9.0
           env:
             - name: DOCKER_HOST
               value: tcp://localhost:2376
